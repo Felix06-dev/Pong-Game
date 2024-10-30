@@ -1,0 +1,42 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class BallMovement : MonoBehaviour
+{
+    private Rigidbody2D body;
+    private Vector3 lastFrameVelocity;
+    private Vector3 initialVelocity;
+    [SerializeField] float speed = 150f;
+    // Start is called before the first frame update
+    void Awake()
+    {
+        // Get the Rigidbody2D component
+        body = GetComponent<Rigidbody2D>();
+
+        // Generate a random direction vector
+        Vector2 randomDirection = Random.insideUnitCircle.normalized;
+
+        // Set the initial velocity
+        body.velocity = randomDirection * speed;
+    }
+
+    private void Update()
+    {
+        lastFrameVelocity = body.velocity;
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        Bounce(collision.contacts[0].normal);
+    }
+
+    private void Bounce(Vector3 collisionNormal)
+    {
+        var speed = lastFrameVelocity.magnitude;
+        var direction = Vector3.Reflect(lastFrameVelocity.normalized, collisionNormal);
+
+        Debug.Log("Out Direction: " + direction);
+        body.velocity = direction * Mathf.Max(speed, speed);
+    }
+}
