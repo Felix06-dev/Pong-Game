@@ -7,18 +7,29 @@ public class BallMovement : MonoBehaviour
     private Rigidbody2D body;
     private Vector3 lastFrameVelocity;
     private Vector3 initialVelocity;
+    private int BounceCounter = 0; 
     [SerializeField] float speed = 150f;
-    // Start is called before the first frame update
+ 
     void Awake()
     {
-        // Get the Rigidbody2D component
+        var speed = 150f;
         body = GetComponent<Rigidbody2D>();
 
-        // Generate a random direction vector
-        Vector2 randomDirection = Random.insideUnitCircle.normalized;
+        Vector2 randomDirection = GetRandomLeftRightDirection();
+        Debug.Log("Random Direction (Left/Right Focused): " + randomDirection);
 
-        // Set the initial velocity
         body.velocity = randomDirection * speed;
+    }
+
+    Vector2 GetRandomLeftRightDirection()
+    {
+        float x = Random.Range(-1f, 1f);
+
+        float y = Random.Range(-0.25f, 0.25f);
+
+        Vector2 direction = new Vector2(x, y).normalized;
+
+        return direction;
     }
 
     private void Update()
@@ -26,17 +37,29 @@ public class BallMovement : MonoBehaviour
         lastFrameVelocity = body.velocity;
     }
 
-    private void OnCollisionEnter(Collision collision)
+    private void OnCollisionEnter2D(Collision2D collision)
     {
-        Bounce(collision.contacts[0].normal);
+        Bounce(collision.contacts[0].normal, collision);
+        if (collision.gameObject.name == "Right Paddle" || collision.gameObject.name == "Left Paddle")
+        {
+            BounceCounter++;
+        }
+        if (collision.gameObject.name == "Score Zone")
+        {
+            speed = 150f;
+            transform.position = new Vector3(0f, 0f, 0f);
+        }
     }
 
-    private void Bounce(Vector3 collisionNormal)
+    private void Bounce(Vector3 collisionNormal, Collision2D collision)
     {
-        var speed = lastFrameVelocity.magnitude;
+        if (BounceCounter > 2 && collision.gameObject.name == "Right Paddle" || collision.gameObject.name == "Left Paddle")
+        {
+            speed = speed + 50;
+            Debug.Log(speed);
+        }
         var direction = Vector3.Reflect(lastFrameVelocity.normalized, collisionNormal);
 
-        Debug.Log("Out Direction: " + direction);
-        body.velocity = direction * Mathf.Max(speed, speed);
+        body.velocity = direction * speed;
     }
 }
